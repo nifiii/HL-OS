@@ -1,0 +1,112 @@
+version: '3.8'
+
+services:
+  # ===========================================================================
+  # FastAPI后端
+  # ===========================================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hlos-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./obsidian_vault:/app/obsidian_vault
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    depends_on:
+      - redis
+      - anythingllm
+    networks:
+      - hlos-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===========================================================================
+  # Streamlit前端
+  # ===========================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: hlos-frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - BACKEND_URL=http://backend:8000
+    depends_on:
+      - backend
+    networks:
+      - hlos-network
+    restart: unless-stopped
+
+  # ===========================================================================
+  # AnythingLLM RAG引擎
+  # ===========================================================================
+  anythingllm:
+    image: mintplexlabs/anythingllm:latest
+    container_name: hlos-anythingllm
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./anythingllm_data/storage:/app/server/storage
+      - ./anythingllm_data/documents:/app/collector/hotdir
+      - ./anythingllm_data/vector-cache:/app/server/storage/vector-cache
+    environment:
+      - STORAGE_DIR=/app/server/storage
+      - UID=1000
+      - GID=1000
+      # 向量数据库配置
+      - VECTOR_DB=${VECTOR_DB:-lancedb}
+      # LLM提供商配置（使用Claude通过OpenAI兼容接口）
+      - LLM_PROVIDER=${LLM_PROVIDER:-generic-openai}
+      - GENERIC_OPEN_AI_BASE_PATH=${GENERIC_OPEN_AI_BASE_PATH}
+      - GENERIC_OPEN_AI_API_KEY=${ANTHROPIC_API_KEY}
+      - GENERIC_OPEN_AI_MODEL_PREF=${GENERIC_OPEN_AI_MODEL_PREF}
+      # 嵌入引擎配置
+      - EMBEDDING_ENGINE=${EMBEDDING_ENGINE:-native}
+      - EMBEDDING_MODEL_PREF=${EMBEDDING_MODEL_PREF:-nomic-embed-text}
+    networks:
+      - hlos-network
+    restart: unless-stopped
+
+  # ===========================================================================
+  # Redis缓存和任务队列
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: hlos-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - hlos-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+# ===========================================================================
+# 网络配置
+# ===========================================================================
+networks:
+  hlos-network:
+    driver: bridge
+
+# ===========================================================================
+# 持久化卷
+# ===========================================================================
+volumes:
+  redis-data:
+    driver: local
