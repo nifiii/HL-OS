@@ -25,7 +25,15 @@ setup: ## 初始化项目（首次使用）
 	@mkdir -p obsidian_vault uploads logs backups
 	@mkdir -p anythingllm_data/documents anythingllm_data/storage anythingllm_data/vector-cache
 	@touch uploads/.gitkeep obsidian_vault/.gitkeep
+	@echo "$(BLUE)设置AnythingLLM目录权限...$(NC)"
+	@if [ "$$(id -u)" != "1000" ]; then \
+		echo "$(YELLOW)警告: 当前用户UID不是1000，可能需要手动设置权限$(NC)"; \
+		echo "$(YELLOW)运行: sudo chown -R 1000:1000 anythingllm_data$(NC)"; \
+	fi
+	@chmod -R 755 anythingllm_data 2>/dev/null || true
 	@echo "$(GREEN)✓ 项目初始化完成$(NC)"
+	@echo "$(YELLOW)注意: 如果AnythingLLM启动失败，请运行:$(NC)"
+	@echo "  sudo chown -R 1000:1000 anythingllm_data"
 
 build: ## 构建Docker镜像
 	@echo "$(BLUE)构建Docker镜像...$(NC)"
