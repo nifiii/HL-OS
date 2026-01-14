@@ -36,9 +36,9 @@
 cd /home/opadm/repo/HL-OS
 
 # 2. 已自动创建 .env 文件，包含以下配置：
-# - Gemini API Key: AIzaSyBoew3ufZKE23UGdxHuM-g2iI_3RJweZnk
-# - Claude 代理: https://crs.yidang.net/api
-# - Claude Token: sk-z-3e74ba887b9b474e809af041f2bff179872f75630869e2f3faa266aee3146dfa
+# - Gemini API Key: AI......nk
+# - Claude 代理: https://CHANGE.ME
+# - Claude Token: sk......fa
 
 # 3. 直接启动服务
 make dev
