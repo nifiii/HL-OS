@@ -105,7 +105,7 @@ CLAUDE_MODEL_GRADING=claude-sonnet-4-5-20250929
 # ANTHROPIC_API_KEY=
 
 # 代理配置
-ANTHROPIC_BASE_URL=https://crs.yidang.net/api
+ANTHROPIC_BASE_URL=https://CHANGE.ME
 ANTHROPIC_AUTH_TOKEN=sk-z-...你的认证令牌
 
 # 模型配置
@@ -117,7 +117,7 @@ CLAUDE_MODEL_GRADING=claude-sonnet-4-5-20250929
 
 ```bash
 # 完整的代理配置示例
-ANTHROPIC_BASE_URL=https://crs.yidang.net/api
+ANTHROPIC_BASE_URL=https://CHANGE.ME
 ANTHROPIC_AUTH_TOKEN=sk-z-3e74ba887b9b474e809af041f2bff179872f75630869e2f3faa266aee3146dfa
 CLAUDE_MODEL_TEACHING=claude-sonnet-4-5-20250929
 CLAUDE_MODEL_GRADING=claude-sonnet-4-5-20250929
@@ -140,7 +140,7 @@ CLAUDE_MODEL_GRADING=claude-sonnet-4-5-20250929
 docker-compose logs backend | grep "ClaudeService initialized"
 
 # 应该看到以下输出之一：
-# ✅ 代理方式: "ClaudeService initialized with proxy: base_url=https://crs.yidang.net/api"
+# ✅ 代理方式: "ClaudeService initialized with proxy: base_url=https://CHANGE.ME"
 # ✅ 官方方式: "ClaudeService initialized with standard API"
 
 # 方法2: 测试 API 调用
@@ -229,7 +229,7 @@ EMBEDDING_MODEL_PREF=nomic-embed-text
 ```bash
 # 从代理切换到直连
 # 1. 注释掉代理配置
-# ANTHROPIC_BASE_URL=https://crs.yidang.net/api
+# ANTHROPIC_BASE_URL=https://CHANGE.ME
 # ANTHROPIC_AUTH_TOKEN=sk-z-...
 
 # 2. 启用官方API配置
