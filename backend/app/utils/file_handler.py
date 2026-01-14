@@ -104,6 +104,10 @@ def save_upload_file(
         raise FileUploadError(f"保存文件失败: {str(e)}", filename=original_filename)
 
 
+# Alias for compatibility
+save_uploaded_file = save_upload_file
+
+
 def cleanup_old_uploads(days: int = 7) -> int:
     """
     清理旧的上传文件

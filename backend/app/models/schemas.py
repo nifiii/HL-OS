@@ -62,25 +62,26 @@ class OCRResult(BaseModel):
 class ValidationSubmission(BaseModel):
     """家长校验提交"""
     task_id: str = Field(..., description="OCR任务ID")
-    corrected_text: str = Field(..., description="校验后的文本")
-    metadata: Dict[str, Any] = Field(..., description="元数据（难度、标签等）")
+    corrected_content: str = Field(..., description="校验后的内容")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="元数据（难度、标签等）")
     save_to_obsidian: bool = Field(default=True, description="是否保存到Obsidian")
     embed_in_anythingllm: bool = Field(default=True, description="是否嵌入AnythingLLM")
-    
+
     child_name: str = Field(..., description="孩子姓名")
     subject: str = Field(..., description="学科")
-    folder_type: Literal["no_problems", "wrong_problems", "cards", "courses"] = Field(
+    folder_type: Literal["No_Problems", "Wrong_Problems", "Cards", "Courses"] = Field(
         ..., description="文件夹类型"
     )
-    filename: str = Field(..., description="文件名")
+    filename: Optional[str] = Field(None, description="文件名（可选，默认使用task_id）")
 
 
 class ValidationResponse(BaseModel):
     """校验响应"""
-    success: bool
-    obsidian_file_path: Optional[str] = None
-    anythingllm_status: Optional[str] = None
-    message: str
+    success: bool = Field(..., description="是否成功")
+    message: str = Field(..., description="消息")
+    task_id: str = Field(..., description="任务ID")
+    obsidian_file_path: Optional[str] = Field(None, description="Obsidian文件路径")
+    embedding_status: Optional[str] = Field(None, description="嵌入状态：queued/skipped/failed")
 
 
 # =============================================================================
@@ -89,12 +90,42 @@ class ValidationResponse(BaseModel):
 
 class ObsidianSaveRequest(BaseModel):
     """Obsidian保存请求"""
-    child_name: str
-    subject: str
-    folder_type: Literal["no_problems", "wrong_problems", "cards", "courses"]
-    filename: str
-    content: str
-    metadata: Dict[str, Any]
+    child_name: str = Field(..., description="孩子姓名")
+    subject: str = Field(..., description="学科")
+    folder_type: Literal["No_Problems", "Wrong_Problems", "Cards", "Courses"] = Field(
+        ..., description="文件夹类型"
+    )
+    filename: str = Field(..., description="文件名")
+    content: str = Field(..., description="内容")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="元数据")
+
+
+class ObsidianSaveResponse(BaseModel):
+    """Obsidian保存响应"""
+    success: bool = Field(..., description="是否成功")
+    message: str = Field(..., description="消息")
+    file_path: str = Field(..., description="文件路径")
+    metadata: Dict[str, Any] = Field(..., description="元数据")
+
+
+class ObsidianUpdateMetadataRequest(BaseModel):
+    """Obsidian更新元数据请求"""
+    file_path: str = Field(..., description="文件路径")
+    metadata: Dict[str, Any] = Field(..., description="要更新的元数据")
+
+
+class ObsidianQueryRequest(BaseModel):
+    """Obsidian查询请求"""
+    child_name: str = Field(..., description="孩子姓名")
+    subject: Optional[str] = Field(None, description="学科")
+    folder_type: Optional[str] = Field(None, description="文件夹类型")
+    filters: Optional[Dict[str, Any]] = Field(None, description="过滤条件")
+
+
+class ObsidianQueryResponse(BaseModel):
+    """Obsidian查询响应"""
+    total: int = Field(..., description="总数")
+    files: List[Dict[str, Any]] = Field(..., description="文件列表")
 
 
 class ObsidianSearchRequest(BaseModel):
@@ -206,8 +237,10 @@ class AssessmentGenerationRequest(BaseModel):
     question_types: List[Literal["multiple_choice", "short_answer", "calculation", "proof"]] = Field(
         ..., min_items=1, description="题型"
     )
-    total_points: int = Field(default=100, ge=1, le=200, description="总分")
-    
+    total_problems: int = Field(..., ge=1, le=50, description="题目总数")
+    prevent_search: bool = Field(default=True, description="防搜索（生成原创题目）")
+    include_detailed_solution: bool = Field(default=True, description="包含详细解答")
+
     @validator('difficulty_distribution')
     def validate_difficulty_distribution(cls, v):
         for difficulty in v.keys():
@@ -216,53 +249,75 @@ class AssessmentGenerationRequest(BaseModel):
         return v
 
 
-class Question(BaseModel):
+class Problem(BaseModel):
     """题目模型"""
-    question_id: str
-    question_text: str
-    question_type: Literal["multiple_choice", "short_answer", "calculation", "proof"]
-    difficulty: int = Field(..., ge=1, le=5)
-    points: int
-    options: Optional[List[str]] = None  # 仅选择题
-    correct_answer: str
-    solution: str
-    grading_rubric: str
-    knowledge_points: List[str]
-    hint: Optional[str] = None
+    problem_id: str = Field(..., description="题目ID")
+    problem_text: str = Field(..., description="题目内容")
+    problem_type: Literal["multiple_choice", "short_answer", "calculation", "proof"] = Field(
+        ..., description="题型"
+    )
+    difficulty: int = Field(..., ge=1, le=5, description="难度等级")
+    points: int = Field(..., description="分值")
+    options: Optional[List[str]] = Field(None, description="选项（仅选择题）")
+    correct_answer: str = Field(..., description="正确答案")
+    solution: str = Field(..., description="详细解答")
+    grading_rubric: str = Field(..., description="评分标准")
+    knowledge_points: List[str] = Field(..., description="知识点")
+    hint: Optional[str] = Field(None, description="提示")
 
 
-class AssessmentResponse(BaseModel):
-    """评测响应"""
-    assessment_id: str
-    questions: List[Question]
-    total_points: int
-    created_at: datetime = Field(default_factory=datetime.now)
-
-
-class GradingRequest(BaseModel):
-    """批改请求"""
+class AssessmentGenerationResponse(BaseModel):
+    """评测生成响应"""
+    success: bool = Field(..., description="是否成功")
+    message: str = Field(..., description="消息")
     assessment_id: str = Field(..., description="评测ID")
-    question_id: str = Field(..., description="题目ID")
-    student_answer: str = Field(..., description="学生答案")
+    problems: List[Problem] = Field(..., description="题目列表")
+    total_problems: int = Field(..., description="题目总数")
+    created_at: str = Field(..., description="创建时间")
+
+
+class AssessmentGradingRequest(BaseModel):
+    """评测批改请求"""
+    assessment_id: str = Field(..., description="评测ID")
+    problem_id: str = Field(..., description="题目ID")
+    student_answer_text: Optional[str] = Field(None, description="学生答案文本")
+    student_answer_image: Optional[str] = Field(None, description="学生答案图片路径")
     show_detailed_feedback: bool = Field(default=True, description="是否显示详细反馈")
 
 
-class GradingResult(BaseModel):
-    """批改结果"""
-    question_id: str
-    score: float
-    max_score: int
-    is_correct: bool
-    correctness_rate: float = Field(..., ge=0.0, le=1.0)
-    feedback: str
-    detailed_feedback: Optional[Dict[str, Any]] = None
-    knowledge_gaps: List[str]
+class AssessmentGradingResponse(BaseModel):
+    """评测批改响应"""
+    success: bool = Field(..., description="是否成功")
+    problem_id: str = Field(..., description="题目ID")
+    score: float = Field(..., description="得分")
+    max_score: int = Field(..., description="满分")
+    is_correct: bool = Field(..., description="是否正确")
+    correctness_rate: float = Field(..., ge=0.0, le=1.0, description="正确率")
+    feedback: str = Field(..., description="反馈")
+    detailed_feedback: Optional[Dict[str, Any]] = Field(None, description="详细反馈")
+    knowledge_gaps: List[str] = Field(default_factory=list, description="知识漏洞")
 
 
-class BatchGradingRequest(BaseModel):
-    """批量批改请求"""
-    assessment_id: str
-    answers: List[Dict[str, str]]  # [{question_id: ..., student_answer: ...}]
+class LearningAnalyticsRequest(BaseModel):
+    """学情分析请求"""
+    child_name: str = Field(..., description="孩子姓名")
+    subject: str = Field(..., description="学科")
+    time_range_days: int = Field(default=30, ge=1, le=365, description="时间范围（天）")
+
+
+class LearningAnalyticsResponse(BaseModel):
+    """学情分析响应"""
+    success: bool = Field(..., description="是否成功")
+    child_name: str = Field(..., description="孩子姓名")
+    subject: str = Field(..., description="学科")
+    total_problems_attempted: int = Field(..., description="尝试题目总数")
+    correct_count: int = Field(..., description="正确数量")
+    wrong_count: int = Field(..., description="错误数量")
+    average_score: float = Field(..., description="平均分")
+    mastery_level: float = Field(..., ge=0.0, le=100.0, description="掌握程度(%)")
+    weak_points: List[str] = Field(..., description="薄弱知识点")
+    progress_trend: Literal["improving", "stable", "declining"] = Field(..., description="进步趋势")
+    recommendations: List[str] = Field(..., description="学习建议")
 
 
 # =============================================================================
@@ -274,6 +329,44 @@ class EmbedDocumentRequest(BaseModel):
     workspace_slug: str = Field(..., description="工作区slug")
     file_path: str = Field(..., description="文件路径")
     metadata: Optional[Dict[str, Any]] = Field(None, description="元数据")
+    index_only: bool = Field(default=False, description="仅创建索引链接，不全量嵌入")
+
+
+class EmbedDocumentResponse(BaseModel):
+    """文档嵌入响应"""
+    success: bool = Field(..., description="是否成功")
+    message: str = Field(..., description="消息")
+    document_id: Optional[str] = Field(None, description="文档ID")
+    workspace_slug: str = Field(..., description="工作区slug")
+
+
+class WorkspaceCreateRequest(BaseModel):
+    """工作区创建请求"""
+    name: str = Field(..., description="工作区名称")
+    child_name: str = Field(..., description="孩子姓名")
+    subject: str = Field(..., description="学科")
+
+
+class WorkspaceResponse(BaseModel):
+    """工作区响应"""
+    slug: str = Field(..., description="工作区slug")
+    name: str = Field(..., description="工作区名称")
+    created_at: Optional[str] = Field(None, description="创建时间")
+    documents_count: Optional[int] = Field(None, description="文档数量")
+
+
+class RAGQueryRequest(BaseModel):
+    """RAG检索请求"""
+    workspace_slug: str = Field(..., description="工作区slug")
+    query: str = Field(..., description="查询内容")
+    top_k: int = Field(default=5, ge=1, le=20, description="返回数量")
+
+
+class RAGQueryResponse(BaseModel):
+    """RAG检索响应"""
+    query: str = Field(..., description="查询内容")
+    context: str = Field(..., description="检索到的上下文")
+    sources: List[Dict[str, Any]] = Field(..., description="来源列表")
 
 
 class QueryRequest(BaseModel):
