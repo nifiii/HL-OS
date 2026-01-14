@@ -84,11 +84,83 @@ class ResourceNotFoundError(HLOSException):
 
 class RateLimitError(HLOSException):
     """速率限制错误"""
-    
+
     def __init__(self, message: str, retry_after: Optional[int] = None):
         super().__init__(
             message=message,
             error_code="RATE_LIMIT_EXCEEDED",
             status_code=429,
             details={"retry_after": retry_after} if retry_after else {}
+        )
+
+
+class ObsidianStorageError(HLOSException):
+    """Obsidian存储错误"""
+
+    def __init__(
+        self,
+        message: str,
+        error_code: str = "OBSIDIAN_STORAGE_ERROR",
+        status_code: int = 500,
+        details: Optional[Dict[str, Any]] = None
+    ):
+        super().__init__(
+            message=message,
+            error_code=error_code,
+            status_code=status_code,
+            details=details or {}
+        )
+
+
+class RAGServiceError(HLOSException):
+    """RAG服务错误（AnythingLLM）"""
+
+    def __init__(
+        self,
+        message: str,
+        error_code: str = "RAG_SERVICE_ERROR",
+        status_code: int = 503,
+        details: Optional[Dict[str, Any]] = None
+    ):
+        super().__init__(
+            message=message,
+            error_code=error_code,
+            status_code=status_code,
+            details=details or {}
+        )
+
+
+class ClaudeServiceError(HLOSException):
+    """Claude API调用错误"""
+
+    def __init__(
+        self,
+        message: str,
+        error_code: str = "CLAUDE_SERVICE_ERROR",
+        status_code: int = 503,
+        details: Optional[Dict[str, Any]] = None
+    ):
+        super().__init__(
+            message=message,
+            error_code=error_code,
+            status_code=status_code,
+            details=details or {}
+        )
+
+
+class GeminiServiceError(HLOSException):
+    """Gemini API调用错误"""
+
+    def __init__(
+        self,
+        message: str,
+        error_code: str = "GEMINI_SERVICE_ERROR",
+        status_code: int = 503,
+        details: Optional[Dict[str, Any]] = None
+    ):
+        super().__init__(
+            message=message,
+            error_code=error_code,
+            status_code=status_code,
+            details=details or {}
         )
