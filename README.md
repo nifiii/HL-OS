@@ -97,13 +97,41 @@ HL-OS 是一个以**质量优先**、**知识资产化**、**隐私保护**为�
 
 ### 前置要求
 
-- Docker 和 Docker Compose
+#### 系统环境
+- **操作系统**: Linux (推荐 Ubuntu 20.04+, CentOS 7+)
+- **Docker**: 20.10+
+- **Docker Compose**: 1.29+
+- **用户权限**: ⚠️ **强烈建议使用具有以下权限的用户部署**：
+  - **root 用户**，或
+  - **具有 sudo 权限的用户**，且
+  - **具有 Docker 管理权限**（在 docker 用户组中）
+
+#### 检查权限
+```bash
+# 检查是否在 docker 组
+groups | grep docker
+
+# 如果不在，添加当前用户到 docker 组
+sudo usermod -aG docker $USER
+# 重新登录使权限生效
+
+# 检查 docker 权限
+docker ps
+```
+
+> ⚠️ **重要提示**: 部署过程需要设置 AnythingLLM 数据目录权限，会要求 sudo 密码。如果您的用户没有 sudo 权限，请联系系统管理员或使用 root 用户部署。
+
+#### API 密钥
 - **Gemini 3 Pro Preview API密钥** - [获取地址](https://makersuite.google.com/app/apikey)
 - **Claude Sonnet 4.5 认证** - 两种方式二选一：
   - 方式A: 代理接入（推荐中国大陆用户）- [配置指南](docs/guides/API_CONFIGURATION.md#方式2-代理接入推荐中国大陆用户)
   - 方式B: 官方API（海外用户）- [获取地址](https://console.anthropic.com/)
 
 ### 安装步骤
+
+> 📘 **首次部署？**
+> - 📋 先完成 **[部署检查清单](DEPLOYMENT_CHECKLIST.md)** 确保环境满足要求
+> - 📖 阅读 **[完整部署指南](docs/guides/DEPLOYMENT.md)** 了解详细的配置步骤
 
 1. **克隆项目**
 ```bash
@@ -149,9 +177,12 @@ make dev
 ```
 
 首次启动会自动：
-- 构建Docker镜像
 - 创建必要的目录
+- **设置 AnythingLLM 目录权限**（会提示输入 sudo 密码）
+- 构建 Docker 镜像
 - 启动所有服务
+
+> 💡 **注意**：执行 `make dev` 时，系统会要求输入 sudo 密码来设置 AnythingLLM 数据目录权限，这是正常且必要的步骤，可以避免后续启动失败。
 
 5. **访问服务**
 - **前端界面**: http://localhost:8501 (家长控制面板)
@@ -437,8 +468,10 @@ chmod -R 755 obsidian_vault/
 
 - **[API参考手册](docs/api/API_REFERENCE.md)** - 完整的REST API文档，包含17个端点的详细说明
 
-### 👨‍💻 开发指南
+### 👨‍💻 开发与部署指南
 
+- **[部署指南](docs/guides/DEPLOYMENT.md)** - 完整的生产环境部署指南（用户权限、环境配置、故障排查）
+- **[部署故障排查](docs/DEPLOYMENT_TROUBLESHOOTING.md)** - 常见部署问题及解决方案
 - **[开发文档](docs/guides/DEVELOPMENT.md)** - 环境准备、代码规范、测试、调试技巧
 - **[API配置指南](docs/guides/API_CONFIGURATION.md)** - Gemini、Claude API配置详解（支持代理接入）
 

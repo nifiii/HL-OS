@@ -17,9 +17,14 @@ mkdir -p "$PROJECT_DIR/anythingllm_data/documents"
 mkdir -p "$PROJECT_DIR/anythingllm_data/vector-cache"
 
 # 设置权限（UID=1000, GID=1000 对应 docker-compose.yml 中的配置）
-echo "设置目录权限..."
-sudo chown -R 1000:1000 "$PROJECT_DIR/anythingllm_data"
-chmod -R 755 "$PROJECT_DIR/anythingllm_data"
+echo "设置目录权限（需要sudo）..."
+if sudo chown -R 1000:1000 "$PROJECT_DIR/anythingllm_data"; then
+    chmod -R 755 "$PROJECT_DIR/anythingllm_data"
+    echo "✓ 权限设置成功"
+else
+    echo "⚠ 警告: 权限设置失败，如果 AnythingLLM 启动失败，请手动执行:"
+    echo "  sudo chown -R 1000:1000 $PROJECT_DIR/anythingllm_data"
+fi
 
 # 显示结果
 echo ""
