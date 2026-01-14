@@ -93,11 +93,15 @@ HL-OS 是一个以**质量优先**、**知识资产化**、**隐私保护**为�
 
 ## 快速开始
 
+> 💡 **新手指南**: 如果您是第一次配置，建议先阅读 [API快速配置指南](QUICK_START_API.md)
+
 ### 前置要求
 
 - Docker 和 Docker Compose
-- Google AI Studio API密钥（[获取地址](https://makersuite.google.com/app/apikey)）
-- Anthropic API密钥（[获取地址](https://console.anthropic.com/)）
+- **Gemini 3 Pro Preview API密钥** - [获取地址](https://makersuite.google.com/app/apikey)
+- **Claude Sonnet 4.5 认证** - 两种方式二选一：
+  - 方式A: 代理接入（推荐中国大陆用户）- [配置指南](docs/guides/API_CONFIGURATION.md#方式2-代理接入推荐中国大陆用户)
+  - 方式B: 官方API（海外用户）- [获取地址](https://console.anthropic.com/)
 
 ### 安装步骤
 
@@ -113,11 +117,31 @@ make setup
 ```
 
 3. **配置API密钥**
-编辑 `.env` 文件，填入你的API密钥：
+
+**方式A - 使用示例配置（快速体验）**:
 ```bash
-GOOGLE_AI_STUDIO_API_KEY=your-google-api-key
-ANTHROPIC_API_KEY=your-anthropic-api-key
+# 已自动创建 .env 文件，包含可用的示例配置
+# 可直接启动服务进行测试
 ```
+
+**方式B - 使用您自己的API密钥**:
+```bash
+# 编辑 .env 文件
+nano .env
+
+# 配置 Gemini API Key（必填）
+GOOGLE_AI_STUDIO_API_KEY=AIzaSy...你的API密钥
+
+# 配置 Claude - 二选一：
+# 方式1: 代理接入（推荐中国大陆用户）
+ANTHROPIC_BASE_URL=https://crs.yidang.net/api
+ANTHROPIC_AUTH_TOKEN=sk-z-...你的Token
+
+# 方式2: 官方API（海外用户）
+# ANTHROPIC_API_KEY=sk-ant-api03-...你的API密钥
+```
+
+> 💡 **详细配置说明**: 参见 [API配置指南](docs/guides/API_CONFIGURATION.md)
 
 4. **启动服务**
 ```bash
@@ -297,7 +321,7 @@ Related_Knowledge_Points:
 | 校验后作业 | 索引链接 | ✅ 永久存储 | `No_Problems/` |
 | 校验后错题 | 索引链接 | ✅ 永久存储 | `Wrong_Problems/` |
 | 知识卡片 | 索引链接 | ✅ 永久存储 | `Cards/` |
-| 完成的课件 | ❌ | ✅ 永久存储 | `Courses/` |
+| 完成的课件 | 索引链接 | ✅ 永久存储 | `Courses/` |
 
 ## 技术栈
 
@@ -416,6 +440,7 @@ chmod -R 755 obsidian_vault/
 ### 👨‍💻 开发指南
 
 - **[开发文档](docs/guides/DEVELOPMENT.md)** - 环境准备、代码规范、测试、调试技巧
+- **[API配置指南](docs/guides/API_CONFIGURATION.md)** - Gemini、Claude API配置详解（支持代理接入）
 
 ### 🧪 测试文档
 

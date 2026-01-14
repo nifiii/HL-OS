@@ -247,15 +247,48 @@ async def approve_teaching_content(request: TeachingContentApprovalRequest):
 
         logger.info(f"教学内容已保存到 Obsidian: {file_path}")
 
-        # 5. 清除预览缓存
+        # 5. 创建索引链接到 AnythingLLM（仅元数据，不全量嵌入）
+        embedding_status = "not_attempted"
+        try:
+            workspace_slug = f"{preview.child_name}_{preview.subject}_courses".lower().replace(" ", "_")
+
+            # 确保工作区存在
+            await anythingllm_service.ensure_workspace(
+                slug=workspace_slug,
+                name=f"{preview.child_name} - {preview.subject} 课件",
+                child_name=preview.child_name,
+                subject=preview.subject
+            )
+
+            # 仅创建索引链接（index_only=True）
+            await anythingllm_service.embed_document(
+                workspace_slug=workspace_slug,
+                file_path=str(file_path),
+                metadata={
+                    **metadata,
+                    "file_path": str(file_path),
+                    "document_type": "course"
+                },
+                index_only=True  # 关键：仅索引，不全量嵌入
+            )
+
+            embedding_status = "index_created"
+            logger.info(f"课件索引链接已创建到 AnythingLLM workspace: {workspace_slug}")
+
+        except Exception as e:
+            logger.warning(f"创建课件索引链接失败（不影响主流程）: {str(e)}")
+            embedding_status = "failed"
+
+        # 6. 清除预览缓存
         del preview_cache[request.preview_id]
 
         return TeachingContentApprovalResponse(
             success=True,
-            message="教学内容已审批并保存",
+            message="教学内容已审批并保存，索引链接已创建",
             preview_id=request.preview_id,
             approved=True,
-            obsidian_file_path=str(file_path)
+            obsidian_file_path=str(file_path),
+            embedding_status=embedding_status
         )
 
     except Exception as e:

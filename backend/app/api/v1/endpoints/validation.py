@@ -246,7 +246,8 @@ async def _embed_to_anythingllm(
                 subject=metadata.get("subject", "")
             )
 
-        # 2. 嵌入文档
+        # 2. 嵌入文档（使用索引链接方式）
+        # 根据存储分级策略：校验后作业、错题、知识卡片都使用"索引链接"方式
         result = await anythingllm_service.embed_document(
             workspace_slug=workspace_slug,
             file_path=str(file_path),
@@ -254,10 +255,11 @@ async def _embed_to_anythingllm(
                 **metadata,
                 "task_id": task_id,
                 "embedded_at": "auto_generated"
-            }
+            },
+            index_only=True  # 仅创建索引链接，不全量嵌入
         )
 
-        logger.info(f"嵌入任务完成 - task_id: {task_id}, result: {result}")
+        logger.info(f"索引链接创建完成 - task_id: {task_id}, result: {result}")
 
     except Exception as e:
         logger.error(

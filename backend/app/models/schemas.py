@@ -134,21 +134,21 @@ class TeachingContentRequest(BaseModel):
     difficulty: int = Field(..., ge=1, le=5, description="难度等级(1-5)")
     style: Literal["启发式", "费曼式", "详解式"] = Field(..., description="教学风格")
     duration_minutes: int = Field(..., ge=5, le=120, description="目标时长(分钟)")
-    additional_instructions: Optional[str] = Field(None, description="额外指示")
-    
+    additional_requirements: Optional[str] = Field(None, description="额外要求")
+
     # RAG检索参数
-    retrieve_from_textbook: bool = Field(default=True, description="是否从教材检索")
-    retrieve_from_wrong_problems: bool = Field(default=True, description="是否从错题检索")
+    use_rag: bool = Field(default=True, description="是否使用RAG检索")
+    rag_top_k: int = Field(default=5, ge=1, le=20, description="RAG检索top-k数量")
 
 
 class TeachingContentResponse(BaseModel):
     """教学内容响应"""
-    content_id: str = Field(..., description="内容ID")
-    marp_markdown: str = Field(..., description="Marp Markdown内容")
-    preview_url: Optional[str] = Field(None, description="预览URL")
-    knowledge_points_used: List[str] = Field(..., description="使用的知识点")
+    success: bool = Field(..., description="是否成功")
+    message: str = Field(..., description="消息")
+    preview_id: str = Field(..., description="预览ID")
+    knowledge_points: List[str] = Field(..., description="知识点")
     estimated_duration: int = Field(..., description="预估时长(分钟)")
-    created_at: datetime = Field(default_factory=datetime.now)
+    preview_url: str = Field(..., description="预览URL")
 
 
 class TeachingContentApproval(BaseModel):
@@ -156,6 +156,39 @@ class TeachingContentApproval(BaseModel):
     content_id: str = Field(..., description="内容ID")
     approved: bool = Field(..., description="是否批准")
     modifications: Optional[str] = Field(None, description="修改意见")
+
+
+class TeachingContentPreview(BaseModel):
+    """教学内容预览"""
+    preview_id: str = Field(..., description="预览ID")
+    child_name: str = Field(..., description="孩子姓名")
+    subject: str = Field(..., description="学科")
+    knowledge_points: List[str] = Field(..., description="知识点列表")
+    difficulty: int = Field(..., description="难度等级")
+    style: str = Field(..., description="教学风格")
+    duration_minutes: int = Field(..., description="目标时长")
+    marp_content: str = Field(..., description="Marp内容")
+    rag_context_used: bool = Field(default=False, description="是否使用了RAG上下文")
+    created_at: str = Field(..., description="创建时间")
+
+
+class TeachingContentApprovalRequest(BaseModel):
+    """教学内容审批请求"""
+    preview_id: str = Field(..., description="预览ID")
+    approved: bool = Field(..., description="是否批准")
+    modifications: Optional[str] = Field(None, description="修改意见")
+    rejection_reason: Optional[str] = Field(None, description="拒绝原因")
+
+
+class TeachingContentApprovalResponse(BaseModel):
+    """教学内容审批响应"""
+    success: bool = Field(..., description="是否成功")
+    message: str = Field(..., description="消息")
+    preview_id: str = Field(..., description="预览ID")
+    approved: bool = Field(..., description="是否批准")
+    obsidian_file_path: Optional[str] = Field(None, description="Obsidian文件路径")
+    rejection_reason: Optional[str] = Field(None, description="拒绝原因")
+    embedding_status: Optional[str] = Field(None, description="嵌入状态：index_created/failed/not_attempted")
 
 
 # =============================================================================

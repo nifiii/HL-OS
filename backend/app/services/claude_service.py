@@ -18,10 +18,24 @@ class ClaudeService:
 
     def __init__(self):
         """初始化Claude服务"""
-        self.client = AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
+        # 支持代理接入方式
+        if settings.ANTHROPIC_BASE_URL and settings.ANTHROPIC_AUTH_TOKEN:
+            # 使用代理方式
+            self.client = AsyncAnthropic(
+                base_url=settings.ANTHROPIC_BASE_URL,
+                api_key=settings.ANTHROPIC_AUTH_TOKEN  # 代理使用auth_token作为api_key
+            )
+            logger.info(f"ClaudeService initialized with proxy: base_url={settings.ANTHROPIC_BASE_URL}")
+        elif settings.ANTHROPIC_API_KEY:
+            # 使用标准方式
+            self.client = AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
+            logger.info("ClaudeService initialized with standard API")
+        else:
+            raise ValueError("Either ANTHROPIC_API_KEY or (ANTHROPIC_BASE_URL + ANTHROPIC_AUTH_TOKEN) must be set")
+
         self.model_teaching = settings.CLAUDE_MODEL_TEACHING
         self.model_grading = settings.CLAUDE_MODEL_GRADING
-        logger.info(f"ClaudeService initialized with models: teaching={self.model_teaching}, grading={self.model_grading}")
+        logger.info(f"Using models: teaching={self.model_teaching}, grading={self.model_grading}")
 
     # =========================================================================
     # 模块C: 教学内容生成

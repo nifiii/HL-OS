@@ -171,7 +171,8 @@ class AnythingLLMService:
         self,
         workspace_slug: str,
         file_path: str,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
+        index_only: bool = False
     ) -> Dict[str, Any]:
         """
         上传并嵌入文档到工作区
@@ -180,11 +181,17 @@ class AnythingLLMService:
             workspace_slug: 工作区slug
             file_path: 文件路径
             metadata: 元数据
+            index_only: 是否仅创建索引链接（不嵌入完整内容）
 
         Returns:
             Dict: 嵌入结果
         """
         try:
+            if index_only:
+                # 仅创建索引链接，不嵌入完整文档内容
+                return await self._embed_index_only(workspace_slug, file_path, metadata)
+
+            # 全量嵌入文档
             # 1. 上传文档
             upload_result = await self.upload_document(file_path, metadata)
             document_name = upload_result.get("document", {}).get("location")
@@ -192,7 +199,7 @@ class AnythingLLMService:
             if not document_name:
                 raise ValueError("Failed to get document location from upload result")
 
-            # 2. 添加到工作区
+            # 2. 添加到工作区进行向量嵌入
             response = await self.client.post(
                 f"/api/workspace/{workspace_slug}/update-embeddings",
                 json={"adds": [document_name]}
@@ -203,11 +210,95 @@ class AnythingLLMService:
             return {
                 "document_name": document_name,
                 "workspace_slug": workspace_slug,
-                "status": "embedded"
+                "status": "embedded",
+                "index_only": False
             }
 
         except Exception as e:
             logger.error(f"Failed to embed document: {e}")
+            raise
+
+    async def _embed_index_only(
+        self,
+        workspace_slug: str,
+        file_path: str,
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """
+        仅创建索引链接，不嵌入完整文档内容
+
+        实现策略：创建一个轻量级的元数据文档，只包含关键信息和文件链接
+
+        Args:
+            workspace_slug: 工作区slug
+            file_path: 原始文件路径
+            metadata: 元数据
+
+        Returns:
+            Dict: 索引创建结果
+        """
+        try:
+            import tempfile
+            from datetime import datetime
+
+            path = Path(file_path)
+
+            # 创建索引文档（仅包含元数据）
+            index_content = f"""# 📄 {path.stem}
+
+**文件路径**: `{file_path}`
+**创建时间**: {metadata.get('created_at', datetime.now().isoformat())}
+
+## 元数据
+
+"""
+            # 添加所有元数据
+            if metadata:
+                for key, value in metadata.items():
+                    if key not in ['created_at']:
+                        index_content += f"- **{key}**: {value}\n"
+
+            index_content += f"""
+
+## 说明
+
+这是一个索引链接文档，指向实际存储在 Obsidian 中的完整内容。
+
+**实际文件位置**: `{file_path}`
+
+---
+*此文档仅用于索引和检索，完整内容请查看 Obsidian 知识库*
+"""
+
+            # 创建临时索引文件
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False, encoding='utf-8') as tmp:
+                tmp.write(index_content)
+                tmp_path = tmp.name
+
+            try:
+                # 上传索引文档（不进行向量嵌入）
+                upload_result = await self.upload_document(tmp_path, {
+                    **metadata,
+                    "is_index_only": True,
+                    "original_file_path": str(file_path)
+                })
+
+                logger.info(f"Created index-only link for {path.name} in workspace {workspace_slug}")
+
+                return {
+                    "document_name": upload_result.get("document", {}).get("location"),
+                    "workspace_slug": workspace_slug,
+                    "status": "index_created",
+                    "index_only": True,
+                    "original_file_path": str(file_path)
+                }
+
+            finally:
+                # 清理临时文件
+                Path(tmp_path).unlink(missing_ok=True)
+
+        except Exception as e:
+            logger.error(f"Failed to create index-only link: {e}")
             raise
 
     async def remove_document(

@@ -41,7 +41,11 @@ class Settings(BaseSettings):
     # 外部API密钥
     # =============================================================================
     GOOGLE_AI_STUDIO_API_KEY: str = Field(..., description="Google AI Studio API密钥")
-    ANTHROPIC_API_KEY: str = Field(..., description="Anthropic API密钥")
+
+    # Anthropic配置（支持代理接入）
+    ANTHROPIC_API_KEY: Optional[str] = Field(default=None, description="Anthropic API密钥（直连时使用）")
+    ANTHROPIC_BASE_URL: Optional[str] = Field(default=None, description="Anthropic API基础URL（代理时使用）")
+    ANTHROPIC_AUTH_TOKEN: Optional[str] = Field(default=None, description="Anthropic认证Token（代理时使用）")
 
     # Gemini模型配置
     GEMINI_MODEL: str = Field(
