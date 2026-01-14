@@ -17,7 +17,7 @@
 #### ✅ Claude Sonnet 4.5 认证（二选一）
 
 **方式A - 代理接入（推荐中国大陆用户）**:
-- Base URL: `https://crs.yidang.net/api`
+- Base URL: `https://CHANGE.ME`
 - Auth Token: `sk-z-...` (从代理服务商获取)
 
 **方式B - 官方API（海外用户）**:
@@ -68,7 +68,7 @@ GOOGLE_AI_STUDIO_API_KEY=你的Gemini-API-Key
 
 # Claude 配置（二选一）
 # 方式A - 使用代理（推荐）
-ANTHROPIC_BASE_URL=https://crs.yidang.net/api
+ANTHROPIC_BASE_URL=https://CHANGE.ME
 ANTHROPIC_AUTH_TOKEN=你的Auth-Token
 
 # 方式B - 使用官方API
@@ -104,7 +104,7 @@ docker-compose ps
 make logs-backend | tail -50
 
 # 应该看到：
-# ✅ "ClaudeService initialized with proxy: base_url=https://crs.yidang.net/api"
+# ✅ "ClaudeService initialized with proxy: base_url=https://CHANGE.ME"
 # 或 "ClaudeService initialized with standard API"
 # ✅ "GeminiVisionService initialized with model: gemini-3-pro-preview-11-2025"
 ```
@@ -165,7 +165,7 @@ make dev
 cat .env | grep ANTHROPIC
 
 # 2. 如果使用代理，确保配置正确
-ANTHROPIC_BASE_URL=https://crs.yidang.net/api  # 注意没有尾部斜杠
+ANTHROPIC_BASE_URL=https://CHANGE.ME  # 注意没有尾部斜杠
 ANTHROPIC_AUTH_TOKEN=sk-z-...  # 确保 token 完整
 
 # 3. 如果使用官方API，检查密钥格式
