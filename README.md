@@ -190,6 +190,15 @@ make dev
 - **API文档**: http://localhost:8000/docs (Swagger UI)
 - **AnythingLLM**: http://localhost:3001
 
+> 💡 **生产环境部署？** 建议配置 Nginx 反向代理实现统一入口和 HTTPS 加密
+> ```bash
+> # 一键配置 Nginx（需要域名）
+> sudo bash scripts/setup_nginx.sh your-domain.com yes
+> sudo certbot --nginx -d your-domain.com
+> # 然后通过 https://your-domain.com 访问
+> ```
+> 详细配置请参考：[Nginx 反向代理配置指南](docs/guides/NGINX_CONFIGURATION.md)
+
 6. **开始功能测试**
 
 系统已完成所有核心功能开发（v1.0），现在可以进行全面的功能测试：
@@ -471,6 +480,8 @@ chmod -R 755 obsidian_vault/
 ### 👨‍💻 开发与部署指南
 
 - **[部署指南](docs/guides/DEPLOYMENT.md)** - 完整的生产环境部署指南（用户权限、环境配置、故障排查）
+- **[Nginx 快速开始](docs/guides/NGINX_QUICK_START.md)** - ⚡ 5 分钟完成 Nginx 反向代理配置（一键脚本）
+- **[Nginx 完整配置](docs/guides/NGINX_CONFIGURATION.md)** - 详细的 Nginx 配置指南（HTTP/HTTPS、SSL、安全加固、性能优化）
 - **[部署故障排查](docs/DEPLOYMENT_TROUBLESHOOTING.md)** - 常见部署问题及解决方案
 - **[开发文档](docs/guides/DEVELOPMENT.md)** - 环境准备、代码规范、测试、调试技巧
 - **[API配置指南](docs/guides/API_CONFIGURATION.md)** - Gemini、Claude API配置详解（支持代理接入）

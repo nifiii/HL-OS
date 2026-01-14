@@ -445,14 +445,67 @@ sudo systemctl enable docker
 
 ## 生产环境建议
 
+### 使用 Nginx 反向代理（强烈推荐）
+
+在生产环境中，强烈建议使用 Nginx 作为反向代理，提供统一的入口和安全保护：
+
+**优势：**
+- ✅ 统一域名访问（http://your-domain.com）
+- ✅ SSL/TLS 加密保护
+- ✅ 负载均衡和高可用
+- ✅ 静态文件优化
+- ✅ 访问控制和安全防护
+
+**配置指南：**
+请参阅 **[Nginx 反向代理配置指南](NGINX_CONFIGURATION.md)** 获取：
+- 完整的 Nginx 配置示例（HTTP 和 HTTPS）
+- SSL 证书配置（Let's Encrypt 免费证书）
+- 安全加固措施
+- 性能优化建议
+- 故障排查方法
+
+**快速开始（一键配置脚本）：**
+```bash
+# 方式 1: 使用一键配置脚本（推荐）
+# HTTP 配置
+sudo bash scripts/setup_nginx.sh your-domain.com
+
+# HTTPS 配置
+sudo bash scripts/setup_nginx.sh your-domain.com yes
+# 然后执行 SSL 证书配置
+sudo certbot --nginx -d your-domain.com
+
+# 方式 2: 手动配置
+# 1. 安装 Nginx
+sudo apt install nginx -y
+
+# 2. 按照 NGINX_CONFIGURATION.md 创建配置文件
+sudo nano /etc/nginx/sites-available/hlos
+
+# 3. 启用配置
+sudo ln -s /etc/nginx/sites-available/hlos /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+
+# 4. 配置 SSL（使用 Let's Encrypt）
+sudo certbot --nginx -d your-domain.com
+```
+
+访问地址：
+- 前端: `https://your-domain.com`
+- API 文档: `https://your-domain.com/docs`
+- 健康检查: `https://your-domain.com/health`
+
+---
+
 ### 安全加固
 
 1. **使用专用的非 root 用户**
-2. **配置防火墙规则**，只开放必要端口
-3. **使用 HTTPS**（通过 Nginx 反向代理）
+2. **配置防火墙规则**，只开放必要端口（80/443）
+3. **使用 HTTPS**（通过 Nginx 反向代理，参见上方）
 4. **定期更新 Docker 镜像**
 5. **配置日志轮转**，防止磁盘空间耗尽
 6. **定期备份数据**（Obsidian 知识库和 AnythingLLM 数据）
+7. **配置访问控制**（IP 白名单、基本认证）
 
 ### 性能优化
 
