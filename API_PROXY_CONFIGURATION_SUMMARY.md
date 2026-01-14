@@ -85,7 +85,7 @@ ANTHROPIC_API_KEY=your-anthropic-api-key
 # ANTHROPIC_API_KEY=your-anthropic-api-key
 
 # 方式2: 通过代理接入（推荐中国大陆用户）
-ANTHROPIC_BASE_URL=https://crs.yidang.net/api
+ANTHROPIC_BASE_URL=https://CHANGE.ME
 ANTHROPIC_AUTH_TOKEN=your-auth-token
 
 # 注意: 方式1和方式2只需配置一种，优先使用方式2（代理）
@@ -106,7 +106,7 @@ GOOGLE_AI_STUDIO_API_KEY=AIzaSyBoew3ufZKE23UGdxHuM-g2iI_3RJweZnk
 GEMINI_MODEL=gemini-3-pro-preview-11-2025
 
 # Claude Sonnet 4.5 (代理接入)
-ANTHROPIC_BASE_URL=https://crs.yidang.net/api
+ANTHROPIC_BASE_URL=https://CHANGE.ME
 ANTHROPIC_AUTH_TOKEN=sk-z-3e74ba887b9b474e809af041f2bff179872f75630869e2f3faa266aee3146dfa
 CLAUDE_MODEL_TEACHING=claude-sonnet-4-5-20250929
 CLAUDE_MODEL_GRADING=claude-sonnet-4-5-20250929
@@ -199,7 +199,7 @@ nano .env
 # ANTHROPIC_API_KEY=sk-ant-api03-...
 
 # 3. 添加代理配置
-ANTHROPIC_BASE_URL=https://crs.yidang.net/api
+ANTHROPIC_BASE_URL=https://CHANGE.ME
 ANTHROPIC_AUTH_TOKEN=sk-z-...
 
 # 4. 重启服务
@@ -252,7 +252,7 @@ make logs-backend | grep -E "initialized|Gemini|Claude"
 
 # 应该看到:
 # ✅ GeminiVisionService initialized with model: gemini-3-pro-preview-11-2025
-# ✅ ClaudeService initialized with proxy: base_url=https://crs.yidang.net/api
+# ✅ ClaudeService initialized with proxy: base_url=https://CHANGE.ME
 # ✅ Using models: teaching=claude-sonnet-4-5-20250929, grading=claude-sonnet-4-5-20250929
 ```
 
@@ -384,7 +384,7 @@ echo $ANTHROPIC_BASE_URL
 echo $ANTHROPIC_AUTH_TOKEN | wc -c  # 应该有合理的长度
 
 # 3. 测试网络连通性
-curl -I https://crs.yidang.net/api
+curl -I https://CHANGE.ME
 
 # 4. 查看详细错误日志
 make logs-backend | grep -i error
@@ -419,7 +419,7 @@ docker-compose exec backend env | grep ANTHROPIC
 # 只保留一种配置
 
 # 方式A: 只使用代理
-ANTHROPIC_BASE_URL=https://crs.yidang.net/api
+ANTHROPIC_BASE_URL=https://CHANGE.ME
 ANTHROPIC_AUTH_TOKEN=sk-z-...
 # ANTHROPIC_API_KEY=  # 注释掉
 
