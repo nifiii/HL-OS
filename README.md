@@ -134,7 +134,7 @@ GOOGLE_AI_STUDIO_API_KEY=AIzaSy...你的API密钥
 
 # 配置 Claude - 二选一：
 # 方式1: 代理接入（推荐中国大陆用户）
-ANTHROPIC_BASE_URL=https://crs.yidang.net/api
+ANTHROPIC_BASE_URL=https://CHANGE.ME
 ANTHROPIC_AUTH_TOKEN=sk-z-...你的Token
 
 # 方式2: 官方API（海外用户）
