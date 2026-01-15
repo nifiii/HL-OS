@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - 2026-01-15
+
+#### Gemini 模型名称配置错误
+- **修复 Backend 启动错误**: `404 models/gemini-3-pro-preview-11-2025 is not found`
+  - 根本原因: 配置的模型名称包含了错误的日期后缀
+  - 正确的模型名称: `gemini-3-pro-preview`（不带日期后缀）
+  - 影响文件: `.env`, `.env.example`
+  - 解决方案: 更新模型名称并重新创建 backend 容器
+
 ### Added - 2026-01-15
 
 #### Streamlit 版本升级

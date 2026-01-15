@@ -370,7 +370,7 @@ Related_Knowledge_Points:
 | **前端框架** | Streamlit | 1.40.2+ | ⚠️ 需要 1.31.0+ 才支持 `st.page_link` API |
 | **后端框架** | FastAPI | 0.109+ | 高性能异步 Web 框架 |
 | **Python** | Python | 3.11+ | 核心运行环境 |
-| **视觉识别** | Gemini 3 Pro Preview | 11-2025 | OCR 和图像识别 |
+| **视觉识别** | Gemini 3 Pro Preview | gemini-3-pro-preview | OCR 和图像识别 |
 | **教学引擎** | Claude Sonnet 4.5 | 20250929 | 内容生成和评测 |
 | **RAG引擎** | AnythingLLM | Latest | 文档检索和向量化 |
 | **向量数据库** | LanceDB | Embedded | 嵌入式向量存储 |
@@ -508,6 +508,31 @@ sudo nginx -s reload
 curl -I -H "Accept-Encoding: gzip" http://your-domain.com/ | grep -i "content-encoding"
 # 应该看到: Content-Encoding: gzip
 ```
+
+### 问题: Backend 报错 `404 models/gemini-3-pro-preview-11-2025 is not found`
+
+**原因**: Gemini 模型名称配置错误，正确的模型名称不应该包含日期后缀。
+
+**解决方案**:
+```bash
+# 1. 更新 .env 文件中的模型名称
+# 将 GEMINI_MODEL=gemini-3-pro-preview-11-2025
+# 改为 GEMINI_MODEL=gemini-3-pro-preview
+
+# 2. 重新创建 backend 容器（重要：restart 不会重新读取 .env）
+docker-compose up -d --force-recreate backend
+
+# 3. 验证配置
+docker exec hlos-backend printenv | grep GEMINI_MODEL
+# 应该显示: GEMINI_MODEL=gemini-3-pro-preview
+
+# 4. 查看日志确认无错误
+docker logs hlos-backend --tail 20
+```
+
+**可用的 Gemini 模型**:
+- `gemini-3-pro-preview` - 最强，推荐用于 OCR 和文档理解
+- `gemini-3-flash-preview` - 快速，适合高吞吐量场景
 
 ## 文档
 
