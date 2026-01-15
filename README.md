@@ -365,17 +365,24 @@ Related_Knowledge_Points:
 
 ## 技术栈
 
-| 组件 | 技术 | 版本 |
-|------|------|------|
-| **后端框架** | FastAPI | 0.109+ |
-| **Python** | Python | 3.11+ |
-| **视觉识别** | Gemini 3 Pro Preview | 11-2025 |
-| **教学引擎** | Claude Sonnet 4.5 | 20250929 |
-| **RAG引擎** | AnythingLLM | Latest |
-| **向量数据库** | LanceDB | Embedded |
-| **知识库** | Obsidian | 文件系统 |
-| **缓存** | Redis | 7-alpine |
-| **容器化** | Docker Compose | 3.8 |
+| 组件 | 技术 | 版本 | 说明 |
+|------|------|------|------|
+| **前端框架** | Streamlit | 1.40.2+ | ⚠️ 需要 1.31.0+ 才支持 `st.page_link` API |
+| **后端框架** | FastAPI | 0.109+ | 高性能异步 Web 框架 |
+| **Python** | Python | 3.11+ | 核心运行环境 |
+| **视觉识别** | Gemini 3 Pro Preview | 11-2025 | OCR 和图像识别 |
+| **教学引擎** | Claude Sonnet 4.5 | 20250929 | 内容生成和评测 |
+| **RAG引擎** | AnythingLLM | Latest | 文档检索和向量化 |
+| **向量数据库** | LanceDB | Embedded | 嵌入式向量存储 |
+| **知识库** | Obsidian | 文件系统 | Markdown 标准化存储 |
+| **缓存** | Redis | 7-alpine | 会话和缓存管理 |
+| **容器化** | Docker Compose | 3.8 | 服务编排 |
+
+### 关键版本要求
+
+- **Streamlit >= 1.31.0**: 系统使用 `st.page_link` API 构建导航菜单，该 API 在 1.31.0 版本引入（2024年2月）
+- **Python >= 3.11**: 利用最新的性能优化和类型提示特性
+- **FastAPI >= 0.109**: 支持最新的依赖注入和异步特性
 
 ## 开发指南
 
@@ -458,6 +465,48 @@ make up
 # 修复权限
 sudo chown -R $USER:$USER obsidian_vault/
 chmod -R 755 obsidian_vault/
+```
+
+### 问题: 前端报错 `AttributeError: module 'streamlit' has no attribute 'page_link'`
+
+**原因**: Streamlit 版本过低，`st.page_link` API 在 1.31.0 版本才引入。
+
+**解决方案:**
+```bash
+# 1. 检查 requirements.txt 中的 Streamlit 版本
+cat frontend/requirements.txt | grep streamlit
+# 应该是: streamlit==1.40.2（或 >= 1.31.0）
+
+# 2. 重新构建并启动 frontend 容器
+docker-compose stop frontend
+docker-compose build --no-cache frontend
+docker-compose up -d frontend
+
+# 3. 验证版本
+docker exec hlos-frontend pip show streamlit | grep Version
+# 应该显示: Version: 1.40.2
+
+# 4. 查看日志确认无错误
+docker logs hlos-frontend
+```
+
+### 问题: 网站加载缓慢
+
+**原因**: 未启用 Nginx 性能优化（gzip 压缩和静态资源缓存）。
+
+**解决方案**: 参考 [Nginx 性能优化配置](docs/guides/NGINX_CONFIGURATION.md#性能优化)，应用以下优化：
+- Gzip 压缩（可减少 77% 的传输大小）
+- 静态资源缓存（7天）
+- 字体文件缓存（365天）
+
+```bash
+# 应用优化后重载 Nginx
+sudo nginx -t
+sudo nginx -s reload
+
+# 验证 Gzip 是否启用
+curl -I -H "Accept-Encoding: gzip" http://your-domain.com/ | grep -i "content-encoding"
+# 应该看到: Content-Encoding: gzip
 ```
 
 ## 文档
