@@ -776,6 +776,8 @@ server {
 
 ### 3. 完整的性能优化配置示例
 
+⚠️ **重要**: 必须包含 Streamlit 特殊路径配置，否则会出现 404 错误。
+
 ```nginx
 upstream hlos_frontend {
     server localhost:8501;
@@ -813,6 +815,68 @@ server {
                application/rss+xml font/truetype font/opentype
                application/vnd.ms-fontobject image/svg+xml;
     gzip_min_length 256;
+
+    # ==================== Streamlit 特殊路径（必需！）====================
+    # ⚠️ 这些路径必须在静态资源规则之前配置
+
+    # Streamlit 核心资源（配置、健康检查等）
+    location /_stcore/ {
+        proxy_pass http://hlos_frontend/_stcore/;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # WebSocket 支持
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        proxy_buffering off;
+    }
+
+    # Streamlit WebSocket 流
+    location /stream {
+        proxy_pass http://hlos_frontend/stream;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # WebSocket 支持
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        proxy_read_timeout 86400;
+        proxy_buffering off;
+    }
+
+    # Streamlit 组件
+    location /component/ {
+        proxy_pass http://hlos_frontend/component/;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_buffering off;
+    }
+
+    # Streamlit vendor 资源
+    location /vendor/ {
+        proxy_pass http://hlos_frontend/vendor/;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
 
     # ==================== 静态资源缓存配置 ====================
 

@@ -123,6 +123,7 @@ docker ps
 
 #### API 密钥
 - **Gemini 3 Pro Preview API密钥** - [获取地址](https://makersuite.google.com/app/apikey)
+  - 🌏 **中国大陆用户**: 如无法直接访问，可配置日本服务器代理 - [代理配置指南](docs/guides/GOOGLE_AI_PROXY.md)
 - **Claude Sonnet 4.5 认证** - 两种方式二选一：
   - 方式A: 代理接入（推荐中国大陆用户）- [配置指南](docs/guides/API_CONFIGURATION.md#方式2-代理接入推荐中国大陆用户)
   - 方式B: 官方API（海外用户）- [获取地址](https://console.anthropic.com/)
@@ -533,6 +534,85 @@ docker logs hlos-backend --tail 20
 **可用的 Gemini 模型**:
 - `gemini-3-pro-preview` - 最强，推荐用于 OCR 和文档理解
 - `gemini-3-flash-preview` - 快速，适合高吞吐量场景
+
+### 问题: 浏览器 Console 报错 `404 (Not Found) Content/_stcore/host-config`
+
+**原因**: Nginx 配置缺少 Streamlit 特殊路径的转发规则。
+
+**错误现象**:
+```
+Content/_stcore/host-config:1  Failed to load resource: the server responded with a status of 404
+Content/_stcore/health:1  Failed to load resource: the server responded with a status of 404
+```
+
+**解决方案**: 在 Nginx 配置中添加 Streamlit 特殊路径（必须在 `location /` 之前）
+
+```nginx
+# ==================== Streamlit 特殊路径（必需！）====================
+# ⚠️ 这些路径必须在静态资源规则和根路径之前配置
+
+# Streamlit 核心资源
+location /_stcore/ {
+    proxy_pass http://hlos_frontend/_stcore/;
+    proxy_http_version 1.1;
+
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+
+    proxy_buffering off;
+}
+
+# Streamlit WebSocket 流
+location /stream {
+    proxy_pass http://hlos_frontend/stream;
+    proxy_http_version 1.1;
+
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+
+    proxy_read_timeout 86400;
+    proxy_buffering off;
+}
+
+# Streamlit 组件
+location /component/ {
+    proxy_pass http://hlos_frontend/component/;
+    proxy_http_version 1.1;
+    # ... 其他配置 ...
+}
+
+# Streamlit vendor 资源
+location /vendor/ {
+    proxy_pass http://hlos_frontend/vendor/;
+    proxy_http_version 1.1;
+    # ... 其他配置 ...
+}
+```
+
+应用配置：
+```bash
+# 测试配置
+sudo nginx -t
+
+# 重载 Nginx
+sudo nginx -s reload
+
+# 验证修复
+curl -I http://your-domain.com/_stcore/health
+# 应该返回: HTTP/1.1 200 OK
+```
+
+**完整配置参考**: [Nginx 配置指南 - Streamlit 特殊路径](docs/guides/NGINX_CONFIGURATION.md#3-完整的性能优化配置示例)
 
 ## 文档
 

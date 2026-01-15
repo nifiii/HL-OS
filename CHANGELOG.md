@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed - 2026-01-15
 
+#### Streamlit 特殊路径 404 错误
+- **修复浏览器 Console 错误**: `404 (Not Found) Content/_stcore/host-config` 和 `404 (Not Found) Content/_stcore/health`
+  - 根本原因: Nginx 配置缺少 Streamlit 特殊路径（`/_stcore/`, `/stream`, `/component/`, `/vendor/`）的转发规则
+  - 影响: Streamlit 无法加载核心配置和建立 WebSocket 连接
+  - 解决方案: 在 Nginx 配置中添加 Streamlit 特殊路径的 location 规则
+  - 影响文件: `/etc/nginx/conf.d/jia.conf`, `docs/guides/NGINX_CONFIGURATION.md`
+  - 配置要点:
+    - 必须在 `location /` 之前配置
+    - 需要包含 WebSocket 支持（Upgrade 和 Connection 头）
+    - 必须禁用缓冲（`proxy_buffering off`）
+
 #### Gemini 模型名称配置错误
 - **修复 Backend 启动错误**: `404 models/gemini-3-pro-preview-11-2025 is not found`
   - 根本原因: 配置的模型名称包含了错误的日期后缀
